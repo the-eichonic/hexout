@@ -1,6 +1,6 @@
 # hexout
 
-A flexible and customizable hex dump library for Rust that provides beautiful, configurable binary data visualization.
+A compact and dependency-free, flexible and customizable hex dump library for Rust that provides beautiful, configurable binary data visualization.
 
 ## Features
 
