@@ -17,16 +17,16 @@ use std::{fmt::{Display, Debug}};
 /// ```
 /// Then use it in your Rust code:
 /// ```rust
-/// use hexout::{hex_dump, HexDumpSettings};
+/// use hexout::{hex_out, HexOutSettings};
 /// let data = vec![0u8, 1, 2, 3, 4, 5, 6, 7, 8, 9];
-/// let settings = HexDumpSettings {
+/// let settings = HexOutSettings {
 ///     group_size: 2,
 ///     groups_per_line: 8,
 ///     big_endian: false,
 ///     show_ascii: true,
 ///     ..Default::default()
 /// };
-/// let dump = hex_dump(&data, &settings, 0, 0, 1).unwrap();
+/// let dump = hex_out(&data, &settings, 0, 0, 1).unwrap();
 /// println!("{}", dump);
 /// ```
 /// # License
@@ -34,7 +34,7 @@ use std::{fmt::{Display, Debug}};
 
 #[derive(Debug, Clone)]
 /// Settings to customize the hex dump output.
-pub struct HexDumpSettings {
+pub struct HexOutSettings {
     /// Width of the address field in characters (default is 8 for 32-bit addresses).
     pub address_width: usize,
     /// Whether to align the address to the nearest group boundary.
@@ -61,7 +61,7 @@ pub struct HexDumpSettings {
     pub hex_out_error_postfix: Option<String>,
 }
 
-impl Default for HexDumpSettings {
+impl Default for HexOutSettings {
     fn default() -> Self {
         Self {
             address_width: 8,
@@ -80,6 +80,8 @@ impl Default for HexDumpSettings {
     }
 }
 
+/// Errors that can occur during hex dump generation.
+#[derive(Clone)]
 pub enum HexOutError {
     /// The specified group size is invalid (must be between 1 and 16).
     InvalidGroupSize,
@@ -115,52 +117,60 @@ impl Debug for HexOutError {
 
 impl std::error::Error for HexOutError {}
 
-/// A trait to provide hex dump functionality for byte slices.
+/// A trait to provide functionality for byte slices.
 pub trait HexOut {
-    fn hex_dump(&self) -> Result<String, HexOutError>;
-    fn hex_dump_lines(&self, start_line: usize, line_count: usize) -> Result<String, HexOutError>;
-    fn hex_dump_with_settings(&self, settings: HexDumpSettings) -> Result<String, HexOutError>;
-    fn hex_dump_lines_with_settings(
+    fn hex_out(&self) -> Result<String, HexOutError>;
+    fn hex_out_lines(&self, start_line: usize, line_count: usize) -> Result<String, HexOutError>;
+    fn hex_out_with_settings(&self, settings: HexOutSettings) -> Result<String, HexOutError>;
+    fn hex_out_lines_with_settings(
         &self,
-        settings: HexDumpSettings,
+        settings: HexOutSettings,
         start_line: usize,
         line_count: usize,
     ) -> Result<String, HexOutError>;
 }
 
 impl HexOut for &[u8] {
-    fn hex_dump(&self) -> Result<String, HexOutError> {
-        hex_dump(self, &HexDumpSettings::default(), 0, 0, 0)
+    fn hex_out(&self) -> Result<String, HexOutError> {
+        hex_out(self, &HexOutSettings::default(), 0, 0, 0)
     }
 
-    fn hex_dump_lines(&self, start_line: usize, line_count: usize) -> Result<String, HexOutError> {
-        hex_dump(self, &HexDumpSettings::default(), 0, start_line, line_count)
+    fn hex_out_lines(&self, start_line: usize, line_count: usize) -> Result<String, HexOutError> {
+        hex_out(self, &HexOutSettings::default(), 0, start_line, line_count)
     }
 
-    fn hex_dump_with_settings(&self, settings: HexDumpSettings) -> Result<String, HexOutError> {
-        hex_dump(self, &settings, 0, 0, 0)
+    fn hex_out_with_settings(&self, settings: HexOutSettings) -> Result<String, HexOutError> {
+        hex_out(self, &settings, 0, 0, 0)
     }
 
-    fn hex_dump_lines_with_settings(
+    fn hex_out_lines_with_settings(
         &self,
-        settings: HexDumpSettings,
+        settings: HexOutSettings,
         start_line: usize,
         line_count: usize,
     ) -> Result<String, HexOutError> {
-        hex_dump(self, &settings, 0, start_line, line_count)
+        hex_out(self, &settings, 0, start_line, line_count)
     }
 }
 
 /// Generate a hex dump of the given data with the specified settings.
+/// 
+/// # Parameters
 /// `data`: The byte slice to be dumped.
+/// 
 /// `settings`: The settings to customize the output.
+/// 
 /// `offset`: The starting offset for the dump.
+/// 
 /// `start_line`: The line number to start the dump from (0-based).
+/// 
 /// `line_count`: The number of lines to include in the dump. (If 0, dumps all lines from start_line to the end of data.)
+/// 
+/// # Returns
 /// Returns a formatted string representing the hex dump.
-pub fn hex_dump(
+pub fn hex_out(
     data: &[u8],
-    settings: &HexDumpSettings,
+    settings: &HexOutSettings,
     offset: usize,
     start_line: usize,
     line_count: usize,
