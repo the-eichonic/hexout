@@ -2,5 +2,10 @@
 name = "hexout"
 version = "0.1.0"
 edition = "2024"
+description = "A compact and dependency-free, flexible and customizable hex dump library for Rust that provides beautiful, configurable binary data visualization."
+license = "MIT"
+license-file = "LICENSE"
+repository = "https://github.com/the-eichonic/hexout"
+readme = "README.md"
 
 [dependencies]
