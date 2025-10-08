@@ -334,13 +334,25 @@ fn offset_address_aligned_32bit_strict() {
     assert_eq!(format!("{}", result.as_ref().err().unwrap()), "Offset 3 does not align with group size 4 in strict mode (offset % group_size = 3)".to_string());
 }
 
-
+#[test]
+fn ansi_colored_errors() {
+    let data = (0u8..=30).collect::<Vec<u8>>();
+    let settings = HexDumpSettings {
+        hex_out_error_prefix: Some("\x1b[31m".to_string()),
+        hex_out_error_postfix: Some("\x1b[0m".to_string()),
+        group_size: 2,
+        groups_per_line: 8,
+        ..Default::default()
+    };
+    let result = hex_dump(&data, &settings, 0, 0, 0).unwrap();
+    assert_eq!(result, "00000000: 0100 0302 0504 0706  0908 0b0a 0d0c 0f0e |........ ........|\n00000010: 1110 1312 1514 1716  1918 1b1a 1d1c \x1b[31m??\x1b[0m1e |........ ....... |");
+}
 
 
 
 
 #[test]
-fn test_large_line_count_doesnt_hang() {
+fn large_line_count_doesnt_hang() {
     let data = vec![0u8; 10];
     let settings = HexDumpSettings::default();
     // Request way more lines than data available

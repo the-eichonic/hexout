@@ -1,6 +1,8 @@
 use std::{fmt::{Display, Debug}};
 
-/// A library for generating customizable hex dumps of binary data in Rust.
+/// A compact and dependency-free, flexible and customizable hex dump library for Rust 
+/// that provides beautiful, configurable binary data visualization.
+/// 
 /// # Features
 /// - Configurable group sizes to any arbitrary byte count (up to 16 bytes)
 /// - Adjustable number of groups per line
@@ -28,8 +30,7 @@ use std::{fmt::{Display, Debug}};
 /// println!("{}", dump);
 /// ```
 /// # License
-/// This project is licensed under the MIT License.
-/// # Author
+/// This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
 
 #[derive(Debug, Clone)]
 /// Settings to customize the hex dump output.
@@ -256,6 +257,15 @@ pub fn hex_dump(
                         settings.group_size - (group_byte_index - cursor % settings.group_size)
                     };
                     let replace_chars = (missing_bytes * 2).min(value.len());
+                    let mut replacement = "?".repeat(replace_chars);
+                    if let Some(prefix) = &settings.hex_out_error_prefix 
+                    {
+                        replacement = format!("{prefix}{replacement}");
+                    }
+                    if let Some(postfix) = &settings.hex_out_error_postfix 
+                    {
+                        replacement = format!("{replacement}{postfix}");
+                    }
                     // The decision to replace leading or trailing characters is based on endiannes and whether we are missing bytes
                     // The following condition represents an XOR operation for the following table:
                     // Big-endian  | Out of bounds bytes | Replace leading chars
@@ -265,11 +275,11 @@ pub fn hex_dump(
                     //     true    |         true        |       false
                     if settings.big_endian != (out_of_bounds_count > 0) {
                         // Big-endian: replace leading characters
-                        value.replace_range(0..replace_chars, "?".repeat(replace_chars).as_str());
+                        value.replace_range(0..replace_chars, &replacement);
                     } else {
                         // Little-endian: replace trailing characters
                         let start = value.len() - replace_chars;
-                        value.replace_range(start..value.len(), "?".repeat(replace_chars).as_str());
+                        value.replace_range(start..value.len(), &replacement);
                     }
                 }
                 line.push_str(&value);
