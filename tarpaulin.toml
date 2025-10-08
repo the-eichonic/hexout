@@ -1,0 +1,3 @@
+[test_config]
+out = ["Html", "Lcov"]
+output-dir = "coverage"
