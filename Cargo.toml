@@ -1,6 +1,6 @@
 [package]
 name = "hexout"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2024"
 description = "A compact and dependency-free, flexible and customizable hex dump library for Rust that provides beautiful, configurable binary data visualization."
 license = "MIT"
