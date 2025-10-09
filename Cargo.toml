@@ -9,3 +9,11 @@ repository = "https://github.com/the-eichonic/hexout"
 readme = "README.md"
 
 [dependencies]
+
+
+[dev-dependencies]
+criterion = { version = "0.7.0", features = ["html_reports"] }
+
+[[bench]]
+name = "hexout_benchmark"
+harness = false

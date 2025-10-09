@@ -229,3 +229,10 @@ Contributions are welcome! Please feel free to submit a Pull Request. For major 
 
 Please make sure to update tests as appropriate.
 
+## Roadmap
+
+[x] Benchmarking
+[ ] Selectable 'invalid_data' symbol
+[ ] Selectable 'ascii section' border symbols
+[ ] Highlighting (address, ascii, number ranges?)
+[ ] Streaming mode

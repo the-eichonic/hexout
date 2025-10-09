@@ -228,7 +228,7 @@ pub fn hex_out(
         if settings.show_ascii {
             if out_of_bounds_count > 0 || cursor < offset {
                 ascii.push(' ');
-            } else if (0x20..0x80).contains(&byte) {
+            } else if (0x20..0x7F).contains(&byte) {
                 ascii.push(byte as char);
             } else {
                 ascii.push('.');
