@@ -27,11 +27,11 @@ hexout = "0.1"
 ### Basic Example
 
 ```rust
-use hexout::hex_dump;
+use hexout::hex_out;
 
 fn main() {
     let data = b"Hello, World!";
-    let result = hex_dump(data, &Default::default(), 0, 0, 0).unwrap();
+    let result = hex_out(data, &Default::default(), 0, 0, 0).unwrap();
     println!("{}", result);
 }
 ```
@@ -48,7 +48,7 @@ use hexout::HexOut;
 
 fn main() {
     let data = vec![0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07];
-    let dump = data.as_slice().hex_dump().unwrap();
+    let dump = data.as_slice().hex_out().unwrap();
     println!("{}", dump);
 }
 ```
@@ -56,7 +56,7 @@ fn main() {
 ### Custom Settings
 
 ```rust
-use hexout::{hex_dump, HexOutSettings};
+use hexout::{hex_out, HexOutSettings};
 
 fn main() {
     let data: Vec<u8> = (0..32).collect();
@@ -71,7 +71,7 @@ fn main() {
         ..Default::default()
     };
     
-    let dump = hex_dump(&data, &settings, 0, 0, 0).unwrap();
+    let dump = hex_out(&data, &settings, 0, 0, 0).unwrap();
     println!("{}", dump);
 }
 ```
@@ -85,7 +85,7 @@ Output:
 ### 16-bit Words (Big-Endian)
 
 ```rust
-use hexout::{hex_dump, HexOutSettings};
+use hexout::{hex_out, HexOutSettings};
 
 fn main() {
     let data: Vec<u8> = (0..32).collect();
@@ -98,7 +98,7 @@ fn main() {
         ..Default::default()
     };
     
-    let dump = hex_dump(&data, &settings, 0, 0, 0).unwrap();
+    let dump = hex_out(&data, &settings, 0, 0, 0).unwrap();
     println!("{}", dump);
 }
 ```
@@ -112,21 +112,27 @@ Output:
 ### Paginated Output
 
 ```rust
-use hexout::{hex_dump, HexOutSettings};
+use hexout::{hex_out, HexOutSettings};
 
 fn main() {
     let data: Vec<u8> = (0..128).collect();
     
     // Display lines 2-3 (0-based indexing)
-    let dump = hex_dump(&data, &HexOutSettings::default(), 0, 2, 2).unwrap();
+    let dump = hex_out(&data, &HexOutSettings::default(), 0, 2, 2).unwrap();
     println!("{}", dump);
 }
+```
+
+Output:
+```
+00000020: 20 21 22 23 24 25 26 27  28 29 2a 2b 2c 2d 2e 2f | !"#$%&' ()*+,-./|
+00000030: 30 31 32 33 34 35 36 37  38 39 3a 3b 3c 3d 3e 3f |01234567 89:;<=>?|
 ```
 
 ### Custom Address Offsets
 
 ```rust
-use hexout::{hex_dump, HexOutSettings};
+use hexout::{hex_out, HexOutSettings};
 
 fn main() {
     let data = vec![0xAA; 16];
@@ -137,20 +143,20 @@ fn main() {
     };
     
     // Start addresses at 0x1000
-    let dump = hex_dump(&data, &settings, 0x1000, 0, 0).unwrap();
+    let dump = hex_out(&data, &settings, 8, 0, 0).unwrap();
     println!("{}", dump);
 }
 ```
 
 Output:
 ```
-0000000000001000: aa aa aa aa aa aa aa aa  aa aa aa aa aa aa aa aa |........ ........|
+0000000000000000:                          aa aa aa aa aa aa aa aa |         ........|
 ```
 
 ### Minimal Output (No Offsets or ASCII)
 
 ```rust
-use hexout::{hex_dump, HexOutSettings};
+use hexout::{hex_out, HexOutSettings};
 
 fn main() {
     let data = vec![0x12, 0x34, 0x56, 0x78];
@@ -162,7 +168,7 @@ fn main() {
         ..Default::default()
     };
     
-    let dump = hex_dump(&data, &settings, 0, 0, 0).unwrap();
+    let dump = hex_out(&data, &settings, 0, 0, 0).unwrap();
     println!("{}", dump);
 }
 ```
@@ -201,7 +207,7 @@ The library returns `Result<String, HexOutError>` with the following error types
 - `UnalignedOffset`: In strict mode, offset must align with group size
 
 ```rust
-use hexout::{hex_dump, HexOutSettings, HexOutError};
+use hexout::{hex_out, HexOutSettings, HexOutError};
 
 fn main() {
     let data = vec![0u8; 10];
@@ -212,7 +218,7 @@ fn main() {
     };
     
     // This will error because offset 1 doesn't align to group_size 4
-    match hex_dump(&data, &settings, 1, 0, 0) {
+    match hex_out(&data, &settings, 1, 0, 0) {
         Ok(dump) => println!("{}", dump),
         Err(HexOutError::UnalignedOffset { offset, group_size }) => {
             eprintln!("Error: offset {} not aligned to group size {}", offset, group_size);
