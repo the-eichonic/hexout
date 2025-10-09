@@ -56,12 +56,12 @@ fn main() {
 ### Custom Settings
 
 ```rust
-use hexout::{hex_dump, HexDumpSettings};
+use hexout::{hex_dump, HexOutSettings};
 
 fn main() {
     let data: Vec<u8> = (0..32).collect();
     
-    let settings = HexDumpSettings {
+    let settings = HexOutSettings {
         group_size: 4,           // 4 bytes per group (32-bit words)
         groups_per_line: 4,      // 4 groups per line
         big_endian: false,       // Little-endian byte order
@@ -85,12 +85,12 @@ Output:
 ### 16-bit Words (Big-Endian)
 
 ```rust
-use hexout::{hex_dump, HexDumpSettings};
+use hexout::{hex_dump, HexOutSettings};
 
 fn main() {
     let data: Vec<u8> = (0..32).collect();
     
-    let settings = HexDumpSettings {
+    let settings = HexOutSettings {
         group_size: 2,           // 2 bytes per group (16-bit words)
         groups_per_line: 8,      // 8 groups per line
         big_endian: true,        // Big-endian byte order
@@ -112,13 +112,13 @@ Output:
 ### Paginated Output
 
 ```rust
-use hexout::{hex_dump, HexDumpSettings};
+use hexout::{hex_dump, HexOutSettings};
 
 fn main() {
     let data: Vec<u8> = (0..128).collect();
     
     // Display lines 2-3 (0-based indexing)
-    let dump = hex_dump(&data, &HexDumpSettings::default(), 0, 2, 2).unwrap();
+    let dump = hex_dump(&data, &HexOutSettings::default(), 0, 2, 2).unwrap();
     println!("{}", dump);
 }
 ```
@@ -126,12 +126,12 @@ fn main() {
 ### Custom Address Offsets
 
 ```rust
-use hexout::{hex_dump, HexDumpSettings};
+use hexout::{hex_dump, HexOutSettings};
 
 fn main() {
     let data = vec![0xAA; 16];
     
-    let settings = HexDumpSettings {
+    let settings = HexOutSettings {
         address_width: 16,  // 64-bit addresses
         ..Default::default()
     };
@@ -150,12 +150,12 @@ Output:
 ### Minimal Output (No Offsets or ASCII)
 
 ```rust
-use hexout::{hex_dump, HexDumpSettings};
+use hexout::{hex_dump, HexOutSettings};
 
 fn main() {
     let data = vec![0x12, 0x34, 0x56, 0x78];
     
-    let settings = HexDumpSettings {
+    let settings = HexOutSettings {
         show_offset: false,
         show_ascii: false,
         show_centerline: false,
@@ -174,7 +174,7 @@ Output:
 
 ## Configuration Options
 
-The `HexDumpSettings` struct provides the following options:
+The `HexOutSettings` struct provides the following options:
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
@@ -201,11 +201,11 @@ The library returns `Result<String, HexOutError>` with the following error types
 - `UnalignedOffset`: In strict mode, offset must align with group size
 
 ```rust
-use hexout::{hex_dump, HexDumpSettings, HexOutError};
+use hexout::{hex_dump, HexOutSettings, HexOutError};
 
 fn main() {
     let data = vec![0u8; 10];
-    let settings = HexDumpSettings {
+    let settings = HexOutSettings {
         group_size: 4,
         strict: true,
         ..Default::default()
