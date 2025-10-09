@@ -348,6 +348,28 @@ fn ansi_colored_errors() {
     assert_eq!(result, "00000000: 0100 0302 0504 0706  0908 0b0a 0d0c 0f0e |........ ........|\n00000010: 1110 1312 1514 1716  1918 1b1a 1d1c \x1b[31m??\x1b[0m1e |........ ....... |");
 }
 
+#[test]
+fn origin_example() {
+    let data = (0u8..=15u8).collect::<Vec<u8>>();
+    let settings = HexOutSettings {
+        address_origin: 0x1000,
+        ..Default::default()
+    };
+    let result = hex_out(&data, &settings, 0, 0, 1).unwrap();
+    assert_eq!(result, "00001000: 00 01 02 03 04 05 06 07  08 09 0a 0b 0c 0d 0e 0f |........ ........|");
+}
+
+#[test]
+fn last_line_padding() {
+    let data = (0u8..24).collect::<Vec<u8>>();
+    let settings = HexOutSettings {
+        group_size: 4,
+        groups_per_line: 4,
+        ..Default::default()
+    };
+    let result = hex_out(&data, &settings, 0, 0, 0).unwrap();
+    assert_eq!(result, "00000000: 03020100 07060504  0b0a0908 0f0e0d0c |........ ........|\n00000010: 13121110 17161514                    |........         |");
+}
 
 
 

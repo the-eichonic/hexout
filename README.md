@@ -178,6 +178,7 @@ The `HexDumpSettings` struct provides the following options:
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
+| `address_origin` | `usize` | `0` | The origin address to start from.  Does not change the actual offset of the data, just the displayed address. |
 | `address_width` | `usize` | `8` | Width of the address field in hex characters |
 | `align_address` | `bool` | `true` | Align addresses to group boundaries |
 | `big_endian` | `bool` | `false` | Use big-endian byte order within groups |
@@ -231,8 +232,8 @@ Please make sure to update tests as appropriate.
 
 ## Roadmap
 
-[x] Benchmarking
-[ ] Selectable 'invalid_data' symbol
 [ ] Selectable 'ascii section' border symbols
+
 [ ] Highlighting (address, ascii, number ranges?)
+
 [ ] Streaming mode

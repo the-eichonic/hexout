@@ -35,6 +35,8 @@ use std::{fmt::{Display, Debug}};
 #[derive(Debug, Clone)]
 /// Settings to customize the hex dump output.
 pub struct HexOutSettings {
+    /// The origin address to start from.  Does not change the actual offset of the data, just the displayed address.  (default is 0).
+    pub address_origin: usize,
     /// Width of the address field in characters (default is 8 for 32-bit addresses).
     pub address_width: usize,
     /// Whether to align the address to the nearest group boundary.
@@ -45,6 +47,8 @@ pub struct HexOutSettings {
     pub group_size: usize,
     /// Number of groups to display per line.
     pub groups_per_line: usize,
+    /// Character to use for invalid or out-of-bounds data (default is '?').
+    pub invalid_data_placeholder: char,
     /// Whether to show the ASCII representation alongside the hex output.
     pub show_ascii: bool,
     /// Whether to show a centerline between groups.
@@ -64,11 +68,13 @@ pub struct HexOutSettings {
 impl Default for HexOutSettings {
     fn default() -> Self {
         Self {
+            address_origin: 0,
             address_width: 8,
             align_address: true,
             big_endian: false,
             group_size: 1,
             groups_per_line: 16,
+            invalid_data_placeholder: '?',
             show_ascii: true,
             show_centerline: true,
             show_offset: true,
@@ -215,7 +221,7 @@ pub fn hex_out(
         cursor - (cursor % (settings.group_size * settings.groups_per_line))
     } else {
         cursor
-    };
+    } + settings.address_origin;
     // Main loop to process each byte
     while cursor < last_line_offset {
         let byte = if let Some(b) = data.get(cursor) {
@@ -267,7 +273,7 @@ pub fn hex_out(
                         settings.group_size - (group_byte_index - cursor % settings.group_size)
                     };
                     let replace_chars = (missing_bytes * 2).min(value.len());
-                    let mut replacement = "?".repeat(replace_chars);
+                    let mut replacement = settings.invalid_data_placeholder.to_string().repeat(replace_chars);
                     if let Some(prefix) = &settings.hex_out_error_prefix 
                     {
                         replacement = format!("{prefix}{replacement}");
@@ -315,32 +321,25 @@ pub fn hex_out(
                 }
                 // If this is the last line, we may need to pad the line
                 if (is_last_line || out_of_bounds_count > 0) && settings.show_ascii {
-                    // Calculate padding needed
-                    let pad_length = total_bytes_per_line - group_index * settings.group_size;
-                    //if group_index > settings.groups_per_line / 2 && settings.show_centerline {
-                    //    pad_length -= 1;
-                    //}
-                    // Pad both hex and ASCII parts
-                    let centerline_size = if settings.show_centerline
-                        && group_index >= settings.groups_per_line / 2
-                    {
+                    // If centerline is shown and we are past the centerline, account for that space
+                    let centerline_size = if settings.show_centerline && group_index >= settings.groups_per_line / 2 {
                         1
                     } else {
                         0
                     };
+                    // Calculate padding needed
+                    let pad_length = ((settings.group_size * 2 + 1) * settings.groups_per_line + centerline_size - 1).saturating_sub(line.len());
+                    let ascii_pad_length = (total_bytes_per_line + centerline_size).saturating_sub(ascii.len());
+                    // Pad both hex and ASCII parts
                     line.push_str(
-                        &" ".repeat(
-                            (pad_length * 3 + centerline_size)
-                                .saturating_sub(out_of_bounds_count * 2 + 1),
-                        ),
+                        &" ".repeat(pad_length),
                     );
                     if settings.show_ascii {
                         ascii.push_str(
-                            &" ".repeat((pad_length + centerline_size).saturating_sub(1)),
+                            &" ".repeat(ascii_pad_length),
                         );
                     }
                 }
-
                 // Append the line and ASCII representation to the result
                 result.push_str(&line);
                 if settings.show_ascii {
