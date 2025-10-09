@@ -184,6 +184,7 @@ The `HexDumpSettings` struct provides the following options:
 | `big_endian` | `bool` | `false` | Use big-endian byte order within groups |
 | `group_size` | `usize` | `1` | Number of bytes per group (1-16) |
 | `groups_per_line` | `usize` | `16` | Number of groups to display per line |
+| `invalid_data_placeholder` | `char` | `?` | Character to use for invalid or out-of-bounds data |
 | `show_ascii` | `bool` | `true` | Show ASCII representation |
 | `show_centerline` | `bool` | `true` | Add extra space at line midpoint |
 | `show_offset` | `bool` | `true` | Show address offset at line start |
