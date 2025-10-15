@@ -371,6 +371,95 @@ fn last_line_padding() {
     assert_eq!(result, "00000000: 03020100 07060504  0b0a0908 0f0e0d0c |........ ........|\n00000010: 13121110 17161514                    |........         |");
 }
 
+#[test]
+fn data_with_header() {
+    let data = (0u8..=15u8).collect::<Vec<u8>>();
+    let settings = HexOutSettings {
+        show_header: true,
+        ..Default::default()
+    };
+    let result = hex_out(&data, &settings, 0, 0, 1).unwrap();
+    assert_eq!(result, "Address: 00 01 02 03 04 05 06 07  08 09 0a 0b 0c 0d 0e 0f\n00000000: 00 01 02 03 04 05 06 07  08 09 0a 0b 0c 0d 0e 0f |........ ........|");
+}
+
+#[test]
+fn short_data_has_correct_ascii_offset() {
+    let data = (0u8..3).collect::<Vec<u8>>();
+    let settings = HexOutSettings {
+        ..Default::default()
+    };
+    let result = hex_out(&data, &settings, 0, 0, 1).unwrap();
+    assert_eq!(result, "00000000: 00 01 02                                         |...              |");
+}
+
+#[test]
+fn vec_trait_usage() {
+    let data = vec![0u8, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+    let result = &data.hex_out().unwrap();
+    assert_eq!(result, "00000000: 00 01 02 03 04 05 06 07  08 09                   |........ ..      |");
+}
+
+#[test]
+fn vec_trait_usage_with_settings() {
+    let data = vec![0u8, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+    let settings = HexOutSettings {
+        group_size: 2,
+        groups_per_line: 8,
+        show_ascii: false,
+        ..Default::default()
+    };
+    let result = &data.hex_out_with_settings(settings).unwrap();
+    assert_eq!(result, "00000000: 0100 0302 0504 0706  0908");
+}
+
+#[test]
+fn vec_trait_usage_with_lines() {
+    let data = (0u8..32).collect::<Vec<u8>>();
+    let result = &data.hex_out_lines(0, 1).unwrap();
+    assert_eq!(result, "00000000: 00 01 02 03 04 05 06 07  08 09 0a 0b 0c 0d 0e 0f |........ ........|");
+}
+
+#[test]
+fn vec_trait_usage_with_lines_and_settings() {
+    let data = (0u8..32).collect::<Vec<u8>>();
+    let settings = HexOutSettings {
+        group_size: 2,
+        groups_per_line: 8,
+        uppercase: true,
+        show_header: true,
+        show_ascii: false,
+        address_width: 4,
+        ..Default::default()
+    };
+    let result = &data.hex_out_lines_with_settings(settings, 0, 1).unwrap();
+    assert_eq!(result, "Addr:   00   02   04   06    08   0A   0C   0E\n0000: 0100 0302 0504 0706  0908 0B0A 0D0C 0F0E");
+}
+
+#[test]
+fn invalid_address_width() {
+    let data = vec![0u8; 10];
+    let settings = HexOutSettings {
+        address_width: 0,
+        ..Default::default()
+    };
+    let result = hex_out(&data, &settings, 0, 0, 1);
+    let error = result.err().unwrap();
+    assert_eq!(error.to_string(), "Invalid address width (must be 2-16)");
+    assert_eq!(format!("{error:?}"), "HexOutError::InvalidAddressWidth");
+}
+
+#[test]
+fn header_with_tiny_address_width() {
+    let data = (65u8..81).collect::<Vec<u8>>();
+    let settings = HexOutSettings {
+        show_header: true,
+        address_width: 2,
+        ..Default::default()
+    };
+    let result = hex_out(&data, &settings, 0, 0, 1).unwrap();
+    assert_eq!(result, "  00 01 02 03 04 05 06 07  08 09 0a 0b 0c 0d 0e 0f\n00: 41 42 43 44 45 46 47 48  49 4a 4b 4c 4d 4e 4f 50 |ABCDEFGH IJKLMNOP|");
+}
+
 
 
 #[test]

@@ -19,7 +19,7 @@ Add `hexout` to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-hexout = "0.1"
+hexout = "0.3"
 ```
 
 ## Usage
@@ -48,7 +48,7 @@ use hexout::HexOut;
 
 fn main() {
     let data = vec![0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07];
-    let dump = data.as_slice().hex_out().unwrap();
+    let dump = data.hex_out().unwrap();
     println!("{}", dump);
 }
 ```
@@ -244,3 +244,10 @@ Please make sure to update tests as appropriate.
 [ ] Highlighting (address, ascii, number ranges?)
 
 [ ] Streaming mode
+
+## Changelog
+
+0.3.0   - Added column address header option
+        - Added trait binding for Vec<u8>
+        * Fixed an alignment issue when line data was too short
+

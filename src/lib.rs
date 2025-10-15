@@ -53,6 +53,8 @@ pub struct HexOutSettings {
     pub show_ascii: bool,
     /// Whether to show a centerline between groups.
     pub show_centerline: bool,
+    /// Whether to show a header row with column addresses.
+    pub show_header: bool,
     /// Whether to show the offset at the start of each line.
     pub show_offset: bool,
     /// Whether to use strict mode (HexOutError on incomplete groups).
@@ -77,6 +79,7 @@ impl Default for HexOutSettings {
             invalid_data_placeholder: '?',
             show_ascii: true,
             show_centerline: true,
+            show_header: false,
             show_offset: true,
             strict: false,
             uppercase: false,
@@ -93,6 +96,7 @@ pub enum HexOutError {
     InvalidGroupSize,
     /// The specified offset does not align with the group size in strict mode.
     UnalignedOffset { offset: usize, group_size: usize },
+    InvalidAddressWidth,
 }
 
 impl Display for HexOutError {
@@ -105,7 +109,8 @@ impl Display for HexOutError {
                     "Offset {} does not align with group size {} in strict mode (offset % group_size = {})",
                     offset, group_size, offset % group_size
                 )
-            }
+            },
+            HexOutError::InvalidAddressWidth => write!(f, "Invalid address width (must be 2-16)"),
         }
     }
 }
@@ -117,6 +122,7 @@ impl Debug for HexOutError {
             HexOutError::UnalignedOffset { offset, group_size } => {
                 write!(f, "HexOutError::UnalignedOffset {{ offset: {offset}, group_size: {group_size} }}")
             }
+            HexOutError::InvalidAddressWidth => write!(f, "HexOutError::InvalidAddressWidth"),
         }
     }
 }
@@ -159,6 +165,29 @@ impl HexOut for &[u8] {
     }
 }
 
+impl HexOut for Vec<u8> {
+    fn hex_out(&self) -> Result<String, HexOutError> {
+        self.as_slice().hex_out()
+    }
+
+    fn hex_out_lines(&self, start_line: usize, line_count: usize) -> Result<String, HexOutError> {
+        self.as_slice().hex_out_lines(start_line, line_count)
+    }
+
+    fn hex_out_with_settings(&self, settings: HexOutSettings) -> Result<String, HexOutError> {
+        self.as_slice().hex_out_with_settings(settings)
+    }
+
+    fn hex_out_lines_with_settings(
+        &self,
+        settings: HexOutSettings,
+        start_line: usize,
+        line_count: usize,
+    ) -> Result<String, HexOutError> {
+        self.as_slice().hex_out_lines_with_settings(settings, start_line, line_count)
+    }
+}
+
 /// Generate a hex dump of the given data with the specified settings.
 /// 
 /// # Parameters
@@ -185,6 +214,10 @@ pub fn hex_out(
     if settings.group_size == 0 || settings.group_size > 16 {
         return Err(HexOutError::InvalidGroupSize);
     }
+    // Validate address_width
+    if settings.address_width < 2 || settings.address_width > 16 {
+        return Err(HexOutError::InvalidAddressWidth);
+    }
     // If strict mode is enabled, ensure we don't start in the middle of a group
     if settings.strict && (offset % settings.group_size != 0) {
         return Err(HexOutError::UnalignedOffset { 
@@ -209,6 +242,39 @@ pub fn hex_out(
     // Calculate starting index
     // Allocate result string with estimated capacity
     let mut result = String::with_capacity(total_bytes_per_line * line_count * 5);
+    if settings.show_header {
+        // Generate header line
+        let mut header = String::with_capacity(total_bytes_per_line * 3);
+        if settings.show_offset {
+            if settings.address_width >= 8 {
+                header.push_str("Address: ");
+                header.push_str(&" ".repeat(settings.address_width - 8));
+            } else if settings.address_width >= 4 {
+                header.push_str("Addr: ");
+                header.push_str(&" ".repeat(settings.address_width - 4));
+            } else {
+                header.push_str(&" ".repeat(settings.address_width));
+            }
+        }
+        for group in 0..settings.groups_per_line {
+            if group > 0 {
+                header.push(' ');
+            }
+            if group == settings.groups_per_line / 2 && settings.show_centerline {
+                header.push(' ');
+            }
+            let col_index = group * settings.group_size;
+            header.push_str(&" ".repeat(settings.group_size * 2 - 2));
+            if settings.uppercase {
+                header.push_str(&format!("{col_index:02X}"));
+            } else {
+                header.push_str(&format!("{col_index:02x}"));
+            }
+        }
+        result.push_str(&header);
+        result.push('\n');
+    }
+
     let mut cursor = if settings.align_address { 0 } else { offset };
     let mut group_index = 0;
     let mut group_byte_index = 0;
@@ -321,12 +387,8 @@ pub fn hex_out(
                 }
                 // If this is the last line, we may need to pad the line
                 if (is_last_line || out_of_bounds_count > 0) && settings.show_ascii {
-                    // If centerline is shown and we are past the centerline, account for that space
-                    let centerline_size = if settings.show_centerline && group_index >= settings.groups_per_line / 2 {
-                        1
-                    } else {
-                        0
-                    };
+                    // If centerline is shown, account for that space
+                    let centerline_size = if settings.show_centerline { 1 } else { 0 };
                     // Calculate padding needed
                     let pad_length = ((settings.group_size * 2 + 1) * settings.groups_per_line + centerline_size - 1).saturating_sub(line.len());
                     let ascii_pad_length = (total_bytes_per_line + centerline_size).saturating_sub(ascii.len());
